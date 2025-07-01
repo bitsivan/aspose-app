@@ -2,7 +2,7 @@
 
 This project is a full-stack solution that allows users to extract paragraph styles from one Word document and apply them to another. It uses:
 
-- ⚙️ **.NET 8 Web API** with **OpenXML SDK** for backend processing
+- ⚙️ **.NET 8 Web API** with **Aspose.Word** for backend processing
 - 💻 **React** with **Axios** for the frontend interface
 
 ---
