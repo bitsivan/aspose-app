@@ -13,6 +13,6 @@ This project is a full-stack solution that allows users to extract paragraph sty
   - **Source Document**: Extracts paragraph styles.
   - **Target Document**: Applies the extracted styles.
 - Download the updated document with consistent formatting.
-- Built with modern tools: .NET 8, React 18, Axios, OpenXML SDK.
+- Built with modern tools: .NET 8, React 18, Axios, Aspose.Word.
 
 ---
