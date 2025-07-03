@@ -45,3 +45,4 @@ C:\develop\aspose-app\WordStyleService\obj\Debug\net8.0\ref\WordStyleService.dll
 C:\develop\aspose-app\WordStyleService\bin\Debug\net8.0\DocumentFormat.OpenXml.dll
 C:\develop\aspose-app\WordStyleService\bin\Debug\net8.0\DocumentFormat.OpenXml.Framework.dll
 C:\develop\aspose-app\WordStyleService\bin\Debug\net8.0\System.IO.Packaging.dll
+C:\develop\aspose-app\WordStyleService\obj\Debug\net8.0\WordStyleService.sourcelink.json
