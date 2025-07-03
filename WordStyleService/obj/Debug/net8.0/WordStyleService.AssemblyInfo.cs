@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("WordStyleService")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+faa0e2265b29e244a2892d99dab268a940d54191")]
 [assembly: System.Reflection.AssemblyProductAttribute("WordStyleService")]
 [assembly: System.Reflection.AssemblyTitleAttribute("WordStyleService")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
