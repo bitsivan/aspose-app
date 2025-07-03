@@ -15,4 +15,6 @@ This project is a full-stack solution that allows users to extract paragraph sty
 - Download the updated document with consistent formatting.
 - Built with modern tools: .NET 8, React 18, Axios, Aspose.Word.
 
+##![image](https://github.com/user-attachments/assets/ccbc8335-2424-4f76-bf39-d8689f338a91)
+
 ---
