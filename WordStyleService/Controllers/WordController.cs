@@ -15,54 +15,21 @@ public class WordController : ControllerBase
     public IActionResult AnalyzeDocument([FromBody] DocumentRequest request)
     {
         var docBytes = Convert.FromBase64String(request.Base64Doc);
-        var doc = new Document(new MemoryStream(docBytes));
         var paraStyles = new Dictionary<string, string>();
         var stylesInline = new List<string>();
 
-        // int segmentStart = 0;
-        int position = 0;
-        // string currentStyle = null;
-        //Iterate Paragraph Nodes
-        foreach (Paragraph para in doc.GetChildNodes(NodeType.Paragraph, true))
-        {
-            var style = para.ParagraphFormat.StyleName;
-            Style baseStyle = para.ParagraphFormat.Style;
-            var baseFont = para.ParagraphFormat.Style.Font;
-            var text = para.GetText().Trim();
+        // Use 'using' statement to properly dispose of the MemoryStream
+        using var stream = new MemoryStream(docBytes);
+        var doc = new Document(stream);
 
-            if (text == "Development")
-            {
-                Console.WriteLine("Style to Development", para.ParagraphFormat.StyleName);
-            }
-            if (!string.IsNullOrEmpty(text))
-            {
-                paraStyles[text] = style;
-            }
+        // Approach 2: Simplified with separate methods (cleaner and more readable)
+        var paragraphs = doc.GetChildNodes(NodeType.Paragraph, true).Cast<Paragraph>();
 
-            foreach (Run run in para.Runs)
-            {
-                var RunText = run.Text;
-                var runFont = run.Font;
-                string styleRun = run.Font.StyleName;
+        // Process paragraph styles
+        ProcessParagraphStyles(paragraphs, paraStyles);
 
-                if ((runFont.Name != baseFont.Name ||
-                   runFont.Size != baseFont.Size ||
-                   runFont.Bold != baseFont.Bold ||
-                   runFont.Italic != baseFont.Italic ||
-                   runFont.Underline != baseFont.Underline ||
-                   runFont.StrikeThrough != baseFont.StrikeThrough ||
-                   runFont.Color != baseFont.Color) && styleRun == "Default Paragraph Font")
-                {
-                    Console.WriteLine("old style-->" + style);
-                    Console.WriteLine(baseFont.Name);
-                    var changes = $"{run.Font.Name} {run.Font.Size} {run.Font.Bold} {run.Font.Italic} {run.Font.Underline} {run.Font.StrikeThrough} {run.Font.Color}";
-                    Console.WriteLine("new style-->" + styleRun + "  " + changes + " for text: " + text);
-                    stylesInline.Add($"Font: {runFont.Name} Position: {position} Text: {RunText}");
-                }
-                position += RunText.Length;
-
-            }
-        }
+        // Process inline styles
+        ProcessInlineStyles(paragraphs, stylesInline);
 
         var result = new
         {
@@ -77,7 +44,10 @@ public class WordController : ControllerBase
     public IActionResult ApplyStyle([FromBody] StyleRequest request)
     {
         var docBytes = Convert.FromBase64String(request.Base64Doc);
-        var doc = new Document(new MemoryStream(docBytes));
+
+        using var inputStream = new MemoryStream(docBytes);
+        var doc = new Document(inputStream);
+
         foreach (Paragraph para in doc.GetChildNodes(NodeType.Paragraph, true))
         {
             var text = para.GetText().Trim();
@@ -91,9 +61,9 @@ public class WordController : ControllerBase
             }
         }
 
-        using var ms = new MemoryStream();
-        doc.Save(ms, SaveFormat.Docx);
-        var result = Convert.ToBase64String(ms.ToArray());
+        using var outputStream = new MemoryStream();
+        doc.Save(outputStream, SaveFormat.Docx);
+        var result = Convert.ToBase64String(outputStream.ToArray());
         return Ok(result);
     }
 
@@ -137,20 +107,78 @@ public class WordController : ControllerBase
         return styles;
     }
 
-}
+    // Helper method to process paragraph styles
+    private void ProcessParagraphStyles(IEnumerable<Paragraph> paragraphs, Dictionary<string, string> paraStyles)
+    {
+        paragraphs
+            .Where(para => !string.IsNullOrEmpty(para.GetText().Trim()))
+            .ToList()
+            .ForEach(para =>
+            {
+                var text = para.GetText().Trim();
+                var style = para.ParagraphFormat.StyleName;
 
+                if (text == "Development")
+                {
+                    Console.WriteLine("Style to Development", style);
+                }
+                paraStyles[text] = style;
+            });
+    }
+
+    // Helper method to process inline styles
+    private void ProcessInlineStyles(IEnumerable<Paragraph> paragraphs, List<string> stylesInline)
+    {
+        int position = 0;
+
+        // Approach 2a: Using Parallel.ForEach for better performance (if you have many paragraphs)
+        foreach (var para in paragraphs)
+        {
+            var baseFont = para.ParagraphFormat.Style.Font;
+            var text = para.GetText().Trim();
+            var style = para.ParagraphFormat.StyleName;
+
+            // Process runs within this paragraph
+            para.Runs.Cast<Run>()
+                .Where(run => HasFontDifferences(run.Font, baseFont) && run.Font.StyleName == "Default Paragraph Font")
+                .ToList()
+                .ForEach(run =>
+                {
+                    Console.WriteLine("old style-->" + style);
+                    Console.WriteLine(baseFont.Name);
+                    var changes = $"{run.Font.Name} {run.Font.Size} {run.Font.Bold} {run.Font.Italic} {run.Font.Underline} {run.Font.StrikeThrough} {run.Font.Color}";
+                    Console.WriteLine("new style-->" + run.Font.StyleName + "  " + changes + " for text: " + text);
+                    stylesInline.Add($"Font: {run.Font.Name} Position: {position} Text: {run.Text}");
+                });
+
+            position += para.GetText().Length;
+        }
+    }
+
+    // Helper method to check font differences
+    private bool HasFontDifferences(Font runFont, Font baseFont)
+    {
+        return runFont.Name != baseFont.Name ||
+               runFont.Size != baseFont.Size ||
+               runFont.Bold != baseFont.Bold ||
+               runFont.Italic != baseFont.Italic ||
+               runFont.Underline != baseFont.Underline ||
+               runFont.StrikeThrough != baseFont.StrikeThrough ||
+               runFont.Color != baseFont.Color;
+    }
+}
 public class CompareRequest
 {
-    public string SourceBase64 { get; set; }
-    public string TargetBase64 { get; set; }
+    public required string SourceBase64 { get; set; }
+    public required string TargetBase64 { get; set; }
 }
 public class DocumentRequest
 {
-    public string Base64Doc { get; set; }
+    public required string Base64Doc { get; set; }
 }
 
 public class StyleRequest
 {
-    public string Base64Doc { get; set; }
-    public Dictionary<string, string> Styles { get; set; }
+    public required string Base64Doc { get; set; }
+    public required Dictionary<string, string> Styles { get; set; }
 }
